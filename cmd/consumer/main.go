@@ -10,11 +10,12 @@ import (
 
 func main() {
 	consumer := NewKafkaConsumer()
+	consumer2 := NewKafkaConsumer2()
 	fmt.Println("start consuming")
 	defer consumer.Close()
 	var ctx = context.Background()
 
-	Consume(consumer, ctx)
+	Consume(consumer, consumer2, ctx)
 }
 
 func NewKafkaConsumer() *kafka.Reader {
@@ -29,7 +30,19 @@ func NewKafkaConsumer() *kafka.Reader {
 	)
 }
 
-func Consume(consumer *kafka.Reader, ctx context.Context) {
+func NewKafkaConsumer2() *kafka.Reader {
+	return kafka.NewReader(
+		kafka.ReaderConfig{
+			Brokers: []string{"localhost:29092"},
+			//Brokers:     []string{"localhost:29092"},
+			Topic:       "simple-2",
+			GroupID:     "kafka-group-id",
+			StartOffset: kafka.LastOffset,
+		},
+	)
+}
+
+func Consume(consumer, consumer2 *kafka.Reader, ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -38,10 +51,18 @@ func Consume(consumer *kafka.Reader, ctx context.Context) {
 		default:
 			msg, err := consumer.ReadMessage(ctx)
 			if err != nil {
+				fmt.Println("Error when consuming message 1: ", err)
+				continue
+			}
+			fmt.Println("Recieved message simple 1: ", string(msg.Value))
+
+			msg, err = consumer2.ReadMessage(ctx)
+			if err != nil {
 				fmt.Println("Error when consuming message: ", err)
 				continue
 			}
-			fmt.Println("Recieved message: ", string(msg.Value))
+			fmt.Println("Recieved message simple 2: ", string(msg.Value))
+
 		}
 	}
 }

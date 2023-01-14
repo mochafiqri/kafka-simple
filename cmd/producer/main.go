@@ -23,6 +23,7 @@ func main() {
 	e.POST("/send-message", func(c echo.Context) error {
 		var ctx = context.Background()
 		var tmp = c.FormValue("message")
+		var topic = c.FormValue("topic")
 		var message = map[string]interface{}{
 			"message": tmp,
 		}
@@ -36,7 +37,7 @@ func main() {
 
 		kafkaMsg := kafka.Message{
 			Key:   []byte("Simple Message"),
-			Topic: "simple",
+			Topic: topic,
 			Value: val,
 		}
 
